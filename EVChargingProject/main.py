@@ -5,9 +5,11 @@ class priorityQueue:
     def _heapify(self, size, i):
         # self.queue: array, size: size of array, index of current element -- starting at first non-leaf node with index of n/2 - 1
         # Set current element i as smallest
+        size = len(self.queue)
+
         smallest = i
-        leftChildIndex = 2 * i + 1 # Index of the right child of current element i
-        rightChildIndex = 2 * i + 2 # Index of the left child of current element i
+        leftChildIndex = 2 * i  # Index of the left child of current element i
+        rightChildIndex = 2 * i + 1 # Index of the right child of current element i
 
         # Check if leftChildIndex is smaller than n to avoid IndexError and
         # if the left child is smaller than current element i, set smallest to left child
@@ -24,34 +26,47 @@ class priorityQueue:
         if smallest != i:
             self.queue[i], self.queue[smallest] = self.queue[smallest], self.queue[i] # Swap smallest with the current element i
             self._heapify(size, smallest) # Recursion -- heapify the array again
-    def insert(self, num):
+
+    def insert(self, entry):
         size = len(self.queue)
         if size == 0: # If the array is empty, simply append the number to the array
-            self.queue.append(num)
+            self.queue.append(entry)
         else: # Otherwise append the number to the array and heapify the array
-            self.queue.append(num)
+            self.queue.append(entry)
             for i in range(size//2-1, -1, -1):
                 self._heapify(size, i)
-    def delete(self, num):
-        size = len(self.queue)
-        i = 0
-        # Search if the number exists in the heap
-        for i in range(0, size):
-            if (self.queue[i] == num):
-                result = i  # Return the index of the number if it does
-        result = -1  # Return -1 if not
 
-        if result == -1:  # If result = -1 (number not found in heap), raise error
-            print("Not found in heap")
+    def delete(self, vertex):
+        size = len(self.queue)
+        result = -1
+        i = 0
+        # Search if the vertex exists in the heap
+        for i in range(0, size):
+            if ((self.queue[i])[1] == vertex):
+                result = i  # Return the index of the vertex if it does
+
+        if result == -1:  # If result = -1 (vertex not found in heap), raise error
+            print("Not found in queue")
         else:
             # Swap element to be deleted with last element
-            self.queue[i], self.queue[size - 1] = self.queue[size - 1], self.queue[i]
+            self.queue[result], self.queue[size - 1] = self.queue[size - 1], self.queue[result]
             # Remove last element
-            self.queue.remove(num)
-            for i in range(size // 2 - 1, -1, -1):
+            self.queue.pop(size-1)
+
+            for x in range(size // 2 - 1, -1, -1):
                 # Iterate over each non-leaf node in the heap starting at the index of the last non-leaf node (n/2-1) as heapifying starts there
                 # and moving backwards to the root node
-                self._heapify(size, i)
+                self._heapify(size, x)
+    def empty(self):
+        if len (self.queue) == 0: return True
+        else: return False
+
+    def getMin(self):
+        return self.queue[0]
+
+    def pop(self):
+        self.delete((self.getMin())[1])
+
     def __str__(self):
         return str(self.queue)
 
@@ -87,64 +102,70 @@ graph = {
     'W' : {'V': 5, 'R': 10}
 }
 
+
 # Dijkstra's Algorithm
 def dijkstra(G, S):
-    distance = []  # Array storing the tentative distances from start node S to all other nodes in graph
-    previous = []  # Array storing the preceding node for each node along the shortest path from start node S
-    visited = []
+    distance = {}  # Dictionary storing the tentative distances from start node S to all other nodes in graph
+    previous = {}  # Dictionary storing the preceding node for each node along the shortest path from start node S
+    visited = set()
 
     Q = priorityQueue()
-    distances = {vertex: float('inf') for vertex in graph}
-    print(distances)
+    #print(distances)
+
     # Initialization
-    for vertex, (key, value) in enumerate(G.items()):
-        # print(vertex, key)
-        distance.insert(vertex, float('inf'))
-        previous.insert(vertex, None)
-        # Set distance of vertex to infinity
-        # Set previous vertex to None
-        if key == S:  # Set distance of start vertex to 0
-            distance[vertex] = 0
-            Q.insert((distance[vertex], key))
-        #if key != S:  # If vertex is not equal to source node S, add vertex to priority queue
-            #Q.insert((distance[vertex], key))
+    for vertex in G:
+        distance[vertex] = float('inf')
+        previous[vertex] = None
+    distance[S] = 0
+    Q.insert((distance[S], S)) # Add starting node to the priority queue
 
-    print(distance)
-    print(Q.queue[0][0])
-    for vertex, (key, value) in enumerate(G.items()):
-        print(key)
-        for neighbor, weight in value.items():
-            print(distances[neighbor], neighbor, weight)
-            tempDistance = distances[key] + weight
-            print(tempDistance)
+    while not Q.empty():
+        print("Nodes to visit:", Q.queue)
+        current = Q.getMin() # Get the node with the smallest distance in the priority queue
+        currentStr = current[1]
+        currentDist = current[0]
+        print ("-------------")
+        print(f"Shortest distance in queue: {currentStr}, {currentDist}")
+        print ("Selecting:", currentStr)
+        print(f"Added {currentStr} to visited list")
+        print ("---")
 
+        visited.add(currentStr) # Add current node to visited list
+        Q.pop() # Remove node from priority queue
+        for neighbor in G[currentStr]: # Find the neighbours of the current node from the graph
+            print (f"Adjacent to {currentStr}: {neighbor}")
+            if neighbor not in visited: # For each unvisited neighbour V of U
+                print (f"   {neighbor} is NOT VISITED. Distance from {currentStr}: {G[currentStr][neighbor]}")
+                print (f"   Current recorded distance for {neighbor}: {distance[neighbor]}")
+                tempDistance = currentDist + G[currentStr][neighbor]  # tempDistance
+                print(f"   Distance from start node {S} via {currentStr}: {tempDistance}")
 
-
-    # While queue is not empty
-    #while len(Q) != 0:
-
-    '''
-    for vertex, (key, value) in enumerate(G.items()):
-        print("Node " + str(key))
-        for test, (key, value) in enumerate(value.items()): # For each neighbouring node V of the current node
-            if value not in visited:
-                print("Not visited")
-                print(key, value)
-                print("Distance", distance[vertex])
-                tempDistance = distance[vertex] + value
-                print(tempDistance)
-                if tempDistance < distance[vertex]:
-                    distance[vertex] = tempDistance
-                    previous[vertex] = value
-                visited.append(value)
-                Q.delete(value)
-    '''
+                if tempDistance < distance[neighbor]:
+                    print(f"    UPDATE:")
+                    print(f"        {tempDistance} is less than current recorded distance {distance[neighbor]}")
+                    print(f"        Added {neighbor} to queue")
+                    distance[neighbor] = tempDistance
+                    previous[neighbor] = currentStr
+                    Q.delete(neighbor)
+                    Q.insert((distance[neighbor], neighbor))
+                else:
+                    print(f"    NO CHANGE:")
+                    print(f"        {tempDistance} is greater than current recorded distance {distance[neighbor]}")
+                    print(f"        NO CHANGE: {distance[neighbor]} is still shortest distance")
 
 
+            else:
+                print(f"    {neighbor} is already visited")
+        print("---")
+        print("")
 
-
-    # print(distance)
-
-
+    print("Distance", distance)
+    print("Previous", previous)
+    print(Q)
+    #G - graph containing vertices, edges, and weights
+    #S - source/start node
+    #Q - priority queue
+    #U - current node
+    #V - unvisited node adjacent to current node U
 
 dijkstra(graph, 'A')
